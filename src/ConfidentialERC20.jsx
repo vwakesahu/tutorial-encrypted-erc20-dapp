@@ -26,7 +26,7 @@ function ConfidentialERC20() {
     setAmountMint(Number(e.target.value));
     console.log(instance);
     if (instance) {
-      //TODO: Encrypt field value and set encrytedData.
+      //TODO: Encrypt field value and set encryptedData.
     }
   };
 
