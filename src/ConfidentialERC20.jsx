@@ -26,6 +26,7 @@ function ConfidentialERC20() {
     setAmountMint(Number(e.target.value));
     console.log(instance);
     if (instance) {
+      //STEP 2:
       //TODO: Encrypt field value and set encryptedData.
     }
   };
@@ -38,7 +39,8 @@ function ConfidentialERC20() {
       setLoading('Encrypting "30" and generating ZK proof...');
       setLoading("Sending transaction...");
 
-      // TODO: Call mint() function on the smart contract
+      //STEP 3: 
+      //TODO: Call mint() function on the smart contract
       
       setLoading("Waiting for transaction validation...");
       await provider.waitForTransaction(transaction.hash);
@@ -57,7 +59,8 @@ function ConfidentialERC20() {
       const contract = new Contract(CONTRACT_ADDRESS, erc20ABI, signer);
       setLoading("Decrypting total supply...");
 
-      // TODO: Generate a temporary keypair along with a signature in order to decrypt the balance
+      //STEP 4: 
+      //TODO: Generate a temporary keypair along with a signature in order to decrypt the balance
 
       setLoading("");
     } catch (e) {
