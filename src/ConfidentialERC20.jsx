@@ -6,6 +6,7 @@ import { Contract } from "ethers";
 import erc20ABI from "./abi/erc20ABI";
 
 let instance;
+# Step 1: Replace Contract Address 
 const CONTRACT_ADDRESS = "0xc0340667B4dC75093A5Fc7a2f95BF2EAF5751b09";
 
 function ConfidentialERC20() {
