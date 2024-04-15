@@ -6,7 +6,8 @@ import { Contract } from "ethers";
 import erc20ABI from "./abi/erc20ABI";
 
 let instance;
-#Step 1: Replace Contract Address 
+//STEP 3: 
+// TODO: Replace Contract Address 
 const CONTRACT_ADDRESS = "0xc0340667B4dC75093A5Fc7a2f95BF2EAF5751b09";
 
 function ConfidentialERC20() {
@@ -27,7 +28,7 @@ function ConfidentialERC20() {
     setAmountMint(Number(e.target.value));
     console.log(instance);
     if (instance) {
-      //STEP 2:
+      //STEP 5:
       //TODO: Encrypt field value and set encryptedData.
     }
   };
@@ -40,7 +41,7 @@ function ConfidentialERC20() {
       setLoading('Encrypting "30" and generating ZK proof...');
       setLoading("Sending transaction...");
 
-      //STEP 3: 
+      //STEP 6: 
       //TODO: Call mint() function on the smart contract
       
       setLoading("Waiting for transaction validation...");
@@ -60,7 +61,7 @@ function ConfidentialERC20() {
       const contract = new Contract(CONTRACT_ADDRESS, erc20ABI, signer);
       setLoading("Decrypting total supply...");
 
-      //STEP 4: 
+      //STEP 7: 
       //TODO: Generate a temporary keypair along with a signature in order to decrypt the balance
 
       setLoading("");
