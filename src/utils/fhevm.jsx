@@ -12,7 +12,7 @@ const FHE_LIB_ADDRESS = '0x000000000000000000000000000000000000005d';
 let instance;
 
 export const createFhevmInstance = async () => {
-  //STEP 1:
+  //STEP 4:
   //TODO: CREATE FHEVM INSTANCE 
        //TODO: FETCH PUBLIC KEY 
 };
