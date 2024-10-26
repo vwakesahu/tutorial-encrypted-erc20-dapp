@@ -1,21 +1,22 @@
 import "./App.css";
 import React, { useState, useEffect } from "react";
-import { init } from "./utils/fhevm";
+import { getFhevmInstance } from "./utils/fhevm";
 import { Connect } from "./Connect";
 import ConfidentialERC20 from "./ConfidentialERC20";
 
 function App() {
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [instance, setInstance] = useState(null);
 
   useEffect(() => {
-    init()
-      .then(() => {
-        setIsInitialized(true);
-      })
-      .catch(() => setIsInitialized(false));
+    const initialize = async () => {
+      const fhevmInstance = await getFhevmInstance();
+      setInstance(fhevmInstance);
+    };
+
+    initialize();
   }, []);
 
-  if (!isInitialized) return null;
+  if (!instance) <></>
 
   return (
     <div className="App flex flex-col justify-center font-press-start text-black">
