@@ -1,14 +1,13 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { getInstance, provider, getTokenSignature } from "./utils/fhevm";
+import { getFhevmInstance as getInstance, provider } from "./utils/fhevm";
 import { toHexString } from "./utils/utils";
-import { Contract } from "ethers";
+import { Contract, ethers } from "ethers";
 import erc20ABI from "./abi/erc20ABI";
 
-let instance;
-//STEP 3: 
-// TODO: Replace Contract Address 
-const CONTRACT_ADDRESS = "0xc0340667B4dC75093A5Fc7a2f95BF2EAF5751b09";
+//STEP 3:
+// TODO: Replace Contract Address
+const CONTRACT_ADDRESS = "0x8bb30CB4d2c46D79059615980e8D831675653447";
 
 function ConfidentialERC20() {
   const [amountMint, setAmountMint] = useState(0);
@@ -16,35 +15,36 @@ function ConfidentialERC20() {
   const [dialog, setDialog] = useState("");
   const [encryptedData, setEncryptedData] = useState("");
   const [userBalance, setUserBalance] = useState("hidden");
+  const [instance, setInstance] = useState(null);
 
   useEffect(() => {
     async function fetchInstance() {
-      instance = await getInstance();
+      const instance = await getInstance();
+      setInstance(instance);
     }
     fetchInstance();
   }, []);
 
   const handleAmountMintChange = (e) => {
-    setAmountMint(Number(e.target.value));
-    console.log(instance);
-    if (instance) {
-      //STEP 5:
-      //TODO: Encrypt field value and set encryptedData.
-    }
+    setAmountMint(e.target.value);
   };
 
   const mint = async (event) => {
     event.preventDefault();
     try {
+      setDialog("");
       const signer = await provider.getSigner();
       const contract = new Contract(CONTRACT_ADDRESS, erc20ABI, signer);
       setLoading('Encrypting "30" and generating ZK proof...');
       setLoading("Sending transaction...");
 
-      //STEP 6: 
+      //STEP 6:
       //TODO: Call mint() function on the smart contract
-      
+      const transaction = contract._mint(
+        ethers.parseUnits(amountMint.toString(), 6)
+      );
       setLoading("Waiting for transaction validation...");
+
       await provider.waitForTransaction(transaction.hash);
       setLoading("");
       setDialog("Tokens have been minted!");
@@ -61,14 +61,44 @@ function ConfidentialERC20() {
       const contract = new Contract(CONTRACT_ADDRESS, erc20ABI, signer);
       setLoading("Decrypting total supply...");
 
-      //STEP 7: 
+      const balanceHandle = await contract.balanceOf(await signer.getAddress());
+
+      //STEP 7:
       //TODO: Generate a temporary keypair along with a signature in order to decrypt the balance
+      const { publicKey, privateKey } = instance.generateKeypair();
+      const eip712 = instance.createEIP712(publicKey, CONTRACT_ADDRESS);
+
+      const signature = await signer.signTypedData(
+        eip712.domain,
+        { Reencrypt: eip712.types.Reencrypt },
+        eip712.message
+      );
+
+      console.log("balanceHandle", balanceHandle);
+      if (balanceHandle.toString() === "0") {
+        console.log("user has 0 balance");
+        setUserBalance("0");
+      } else {
+        const balanceResult = await instance.reencrypt(
+          balanceHandle,
+          privateKey,
+          publicKey,
+          signature.replace("0x", ""),
+          CONTRACT_ADDRESS,
+          await signer.getAddress()
+        );
+
+
+        setUserBalance(balanceResult.toString());
+        console.log(balanceResult.toString());
+      }
 
       setLoading("");
     } catch (e) {
       console.log(e);
       setLoading("");
       setDialog("Error during reencrypt!");
+      setUserBalance("Error"); 
     }
   };
 
@@ -104,7 +134,7 @@ function ConfidentialERC20() {
             </div>
             <div className="text-white">
               Your Balance:{" "}
-              <span className="text-custom-green">{userBalance}</span>
+              <span className="text-custom-green">{userBalance && userBalance === 'hidden' ? 'hidden' : userBalance?.slice(0, -6) ? userBalance?.slice(0, -6) : '0'}</span>
             </div>
             <button
               className="bg-gray-200 hover:bg-blue-400 text-black font-bold py-2 px-4 rounded mb-8"
@@ -158,8 +188,9 @@ function ConfidentialERC20() {
           <div>
             Smart Contract Implementation:{" "}
             <a
-              target="_blank" rel="noreferrer"
-              href="https://docs.inco.org/getting-started/example-dapps/erc-20" 
+              target="_blank"
+              rel="noreferrer"
+              href="https://docs.inco.org/getting-started/example-dapps/erc-20"
             >
               Here
             </a>

@@ -2,7 +2,7 @@ import { BrowserProvider } from "ethers";
 import { createFhevmInstance } from "./utils/fhevm";
 import { useState, useCallback, useEffect, useMemo, React } from "react";
 
-const AUTHORIZED_CHAIN_ID = ["0x2382"];
+const AUTHORIZED_CHAIN_ID = ["0x5269"];
 
 export const Connect = ({ children }) => {
   const [connected, setConnected] = useState(false);
@@ -86,14 +86,14 @@ export const Connect = ({ children }) => {
         params: [
           {
             chainId: AUTHORIZED_CHAIN_ID[0],
-            rpcUrls: ["https://testnet.inco.org/"],
-            chainName: "Inco Gentry Testnet",
+            rpcUrls: ["https://validator.rivest.inco.org"],
+            chainName: "Rivest Testnet",
             nativeCurrency: {
               name: "INCO",
               symbol: "INCO",
               decimals: 18,
             },
-            blockExplorerUrls: ["https://explorer.testnet.inco.org"],
+            blockExplorerUrls: ["https://explorer.rivest.inco.org"],
           },
         ],
       });
