@@ -7,7 +7,7 @@ import erc20ABI from "./abi/erc20ABI";
 
 //STEP 3:
 // TODO: Replace Contract Address
-const CONTRACT_ADDRESS = "0x8bb30CB4d2c46D79059615980e8D831675653447";
+const CONTRACT_ADDRESS = "0x0EC4C38C37320Cd16c7eFFFFDfa778C5534b7F33";
 
 function ConfidentialERC20() {
   const [amountMint, setAmountMint] = useState(0);
@@ -34,14 +34,44 @@ function ConfidentialERC20() {
     try {
       setDialog("");
       const signer = await provider.getSigner();
-      const contract = new Contract(CONTRACT_ADDRESS, erc20ABI, signer);
+      const contract = new Contract(CONTRACT_ADDRESS, [{
+        "inputs": [
+          {
+            "internalType": "einput",
+            "name": "encryptedAmount",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "inputProof",
+            "type": "bytes"
+          }
+        ],
+        "name": "_mint",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },], signer);
+
+      const input = await instance.createEncryptedInput(
+        CONTRACT_ADDRESS,
+        await signer.getAddress()
+      );
+      input.add64(ethers.parseUnits(amountMint.toString(), 6));
+      const encryptedInput = input.encrypt();
+
+      console.log(encryptedInput)
+
+
       setLoading('Encrypting "30" and generating ZK proof...');
       setLoading("Sending transaction...");
 
       //STEP 6:
       //TODO: Call mint() function on the smart contract
-      const transaction = contract._mint(
-        ethers.parseUnits(amountMint.toString(), 6)
+      console.log(contract)
+      const transaction = await contract._mint(
+        encryptedInput.handles[0],
+        "0x" + toHexString(encryptedInput.inputProof)
       );
       setLoading("Waiting for transaction validation...");
 
@@ -57,6 +87,7 @@ function ConfidentialERC20() {
 
   const reencrypt = async () => {
     try {
+      setDialog("");
       const signer = await provider.getSigner();
       const contract = new Contract(CONTRACT_ADDRESS, erc20ABI, signer);
       setLoading("Decrypting total supply...");
@@ -98,7 +129,7 @@ function ConfidentialERC20() {
       console.log(e);
       setLoading("");
       setDialog("Error during reencrypt!");
-      setUserBalance("Error"); 
+      setUserBalance("Error");
     }
   };
 
