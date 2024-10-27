@@ -3,9 +3,18 @@ import { createInstance, initFhevm } from "fhevmjs";
 
 let fhevmInstance = null;
 
-export const provider = new BrowserProvider(window.ethereum);
+export const getProvider = () => {
+  if (typeof window !== "undefined" && window.ethereum) {
+    return new BrowserProvider(window.ethereum);
+  }
+  return null;
+};
 
 export const createFhevmInstance = async () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
   if (!fhevmInstance) {
     await initFhevm();
     fhevmInstance = await createInstance({
@@ -19,6 +28,10 @@ export const createFhevmInstance = async () => {
 };
 
 export const getFhevmInstance = async () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
   if (!fhevmInstance) {
     fhevmInstance = await createFhevmInstance();
   }
