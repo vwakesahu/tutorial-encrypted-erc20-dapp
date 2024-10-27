@@ -1,5 +1,5 @@
 
-# Confidential ERC20 Dapp Next Dapp
+# Confidential ERC20 Dapp
 
 This is a [Next.js](https://nextjs.org/) project initialized with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
