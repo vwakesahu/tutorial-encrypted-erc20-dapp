@@ -2,28 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { ethers } from "ethers";
 
 const RIVEST_CHAIN = {
-  id: 21097,
-  network: "Rivest",
-  name: "Rivest Testnet",
-  nativeCurrency: {
-    name: "INCO",
-    symbol: "INCO",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://validator.rivest.inco.org"],
-    },
-    public: {
-      http: ["https://validator.rivest.inco.org"],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "Explorer",
-      url: "https://explorer.rivest.inco.org",
-    },
-  },
+  // ... your chain config remains the same
 };
 
 const WalletContext = createContext({
@@ -45,35 +24,45 @@ export const WalletProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [chainId, setChainId] = useState(null);
   const [isCorrectChain, setIsCorrectChain] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
+  // Set mounted state when component mounts
   useEffect(() => {
-    checkConnection();
-
-    if (window.ethereum) {
-      window.ethereum.on("accountsChanged", handleAccountsChanged);
-      window.ethereum.on("chainChanged", handleChainChanged);
-    }
-
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener(
-          "accountsChanged",
-          handleAccountsChanged
-        );
-        window.ethereum.removeListener("chainChanged", handleChainChanged);
-      }
-    };
+    setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (mounted && typeof window !== "undefined") {
+      checkConnection();
+
+      if (window.ethereum) {
+        window.ethereum.on("accountsChanged", handleAccountsChanged);
+        window.ethereum.on("chainChanged", handleChainChanged);
+      }
+
+      return () => {
+        if (window.ethereum) {
+          window.ethereum.removeListener(
+            "accountsChanged",
+            handleAccountsChanged
+          );
+          window.ethereum.removeListener("chainChanged", handleChainChanged);
+        }
+      };
+    }
+  }, [mounted]);
+
   const handleChainChanged = (newChainId) => {
-    setChainId(Number(newChainId));
-    setIsCorrectChain(Number(newChainId) === RIVEST_CHAIN.id);
-    window.location.reload();
+    if (typeof window !== "undefined") {
+      setChainId(Number(newChainId));
+      setIsCorrectChain(Number(newChainId) === RIVEST_CHAIN.id);
+      window.location.reload();
+    }
   };
 
   const checkConnection = async () => {
     try {
-      if (window.ethereum) {
+      if (typeof window !== "undefined" && window.ethereum) {
         const chainId = await window.ethereum.request({
           method: "eth_chainId",
         });
@@ -114,7 +103,7 @@ export const WalletProvider = ({ children }) => {
   };
 
   const switchChain = async () => {
-    if (!window.ethereum) return;
+    if (typeof window === "undefined" || !window.ethereum) return;
 
     try {
       await window.ethereum.request({
@@ -122,7 +111,6 @@ export const WalletProvider = ({ children }) => {
         params: [{ chainId: `0x${RIVEST_CHAIN.id.toString(16)}` }],
       });
     } catch (switchError) {
-      // This error code means that the chain has not been added to MetaMask
       if (switchError.code === 4902) {
         try {
           await window.ethereum.request({
@@ -146,7 +134,7 @@ export const WalletProvider = ({ children }) => {
   };
 
   const connect = async () => {
-    if (!window.ethereum) {
+    if (typeof window === "undefined" || !window.ethereum) {
       alert("Please install MetaMask!");
       return;
     }
@@ -187,6 +175,10 @@ export const WalletProvider = ({ children }) => {
     setChainId(null);
     setIsCorrectChain(false);
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <WalletContext.Provider

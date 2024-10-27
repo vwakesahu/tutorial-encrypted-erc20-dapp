@@ -22,7 +22,7 @@ import { CodeSnippets } from "./code-snippets";
 import { BrowserProvider, Contract, ethers } from "ethers";
 import { toHexString } from "@/utils/utils";
 import erc20ABI from "@/abi/erc20ABI.json";
-import { useWallet, disconnect } from "@/contexts/wallet-context";
+import { useWallet } from "@/contexts/wallet-context";
 import Link from "next/link";
 import { getFhevmInstance } from "@/utils/fhevm";
 
@@ -55,7 +55,8 @@ const ConfidentialERC20 = () => {
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [userBalance, setUserBalance] = useState("Hidden");
   const [instance, setInstance] = useState(null);
-
+  const { disconnect } = useWallet();
+  
   useEffect(() => {
     const getInstance = async () => {
       const provider = new BrowserProvider(window.ethereum);
