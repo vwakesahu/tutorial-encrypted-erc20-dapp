@@ -128,17 +128,40 @@ const ConfidentialERC20 = () => {
   const reencrypt = async () => {
     setIsDecrypting(true);
     try {
+      // Step 1: Check local storage for existing keys and EIP-712 signature for this contract
+      const contractKey = `reencrypt_${CONTRACT_ADDRESS}`;
+      const storedData = JSON.parse(localStorage.getItem(contractKey));
+  
+      let publicKey, privateKey, signature;
+  
+      if (storedData) {
+        // Use existing keys and signature if found
+        ({ publicKey, privateKey, signature } = storedData);
+      } else {
+        // Step 2: Generate keys and request EIP-712 signature if no data in local storage
+        const { publicKey: genPublicKey, privateKey: genPrivateKey } = instance.generateKeypair();
+        const eip712 = instance.createEIP712(genPublicKey, CONTRACT_ADDRESS);
+  
+        // Prompt user to sign the EIP-712 message
+        signature = await signer.signTypedData(
+          eip712.domain,
+          { Reencrypt: eip712.types.Reencrypt },
+          eip712.message
+        );
+  
+        // Store generated data in local storage
+        publicKey = genPublicKey;
+        privateKey = genPrivateKey;
+        localStorage.setItem(
+          contractKey,
+          JSON.stringify({ publicKey, privateKey, signature })
+        );
+      }
+  
+      // Step 3: Use the public key, private key, and signature in the reencrypt function
       const contract = new Contract(CONTRACT_ADDRESS, erc20ABI, signer);
       const balanceHandle = await contract.balanceOf(await signer.getAddress());
-
-      const { publicKey, privateKey } = instance.generateKeypair();
-      const eip712 = instance.createEIP712(publicKey, CONTRACT_ADDRESS);
-      const signature = await signer.signTypedData(
-        eip712.domain,
-        { Reencrypt: eip712.types.Reencrypt },
-        eip712.message
-      );
-
+  
       if (balanceHandle.toString() === "0") {
         setUserBalance("0");
       } else {
@@ -158,6 +181,7 @@ const ConfidentialERC20 = () => {
       setIsDecrypting(false);
     }
   };
+  
 
   const formatBalance = (balance) => {
     if (balance === "Hidden") return balance;
