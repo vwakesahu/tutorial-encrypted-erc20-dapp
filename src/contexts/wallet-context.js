@@ -2,7 +2,28 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { ethers } from "ethers";
 
 const RIVEST_CHAIN = {
-  // ... your chain config remains the same
+  id: 21097,
+  network: "Rivest",
+  name: "Rivest Testnet",
+  nativeCurrency: {
+    name: "INCO",
+    symbol: "INCO",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://validator.rivest.inco.org"],
+    },
+    public: {
+      http: ["https://validator.rivest.inco.org"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Explorer",
+      url: "https://explorer.rivest.inco.org",
+    },
+  },
 };
 
 const WalletContext = createContext({
@@ -12,9 +33,9 @@ const WalletContext = createContext({
   isConnected: false,
   chainId: null,
   isCorrectChain: false,
-  connect: async () => {},
-  disconnect: () => {},
-  switchChain: async () => {},
+  connect: async () => { },
+  disconnect: () => { },
+  switchChain: async () => { },
 });
 
 export const WalletProvider = ({ children }) => {
