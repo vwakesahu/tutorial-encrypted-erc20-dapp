@@ -3,9 +3,8 @@
 import NotConnected from "@/components/not-connected";
 import { Source_Code_Pro } from "next/font/google";
 import React from "react";
-import { WalletProvider } from "@/contexts/wallet-context";
-import { useWallet } from "@/contexts/wallet-context";
 import Connected from "@/components/connected";
+import { usePrivy } from "@privy-io/react-auth";
 
 const sourceCodePro = Source_Code_Pro({
   subsets: ["latin"],
@@ -13,18 +12,16 @@ const sourceCodePro = Source_Code_Pro({
 });
 
 const HomeContent = () => {
-  const { isConnected } = useWallet();
+  const { authenticated: isConnected } = usePrivy();
 
   return isConnected ? <Connected /> : <NotConnected />;
 };
 
 const Home = () => {
   return (
-    <WalletProvider>
-      <div className={sourceCodePro.className}>
-        <HomeContent />
-      </div>
-    </WalletProvider>
+    <div className={sourceCodePro.className}>
+      <HomeContent />
+    </div>
   );
 };
 
