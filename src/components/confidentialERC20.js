@@ -19,12 +19,13 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { CodeSnippets } from "./code-snippets";
-import { BrowserProvider, Contract, ethers } from "ethers";
+import { Contract, ethers } from "ethers";
 import { toHexString } from "@/utils/utils";
 import erc20ABI from "@/abi/erc20ABI.json";
-import { useWallet } from "@/contexts/wallet-context";
 import Link from "next/link";
 import { getFhevmInstance } from "@/utils/fhevm";
+import { usePrivy } from "@privy-io/react-auth";
+import { useWalletContext } from "@/privy/walletContext";
 
 const CONTRACT_ADDRESS = "0x0EC4C38C37320Cd16c7eFFFFDfa778C5534b7F33";
 const mintABI = [
@@ -49,53 +50,21 @@ const mintABI = [
 ];
 
 const ConfidentialERC20 = () => {
-  const [signer, setSigner] = useState(null);
+  const { signer } = useWalletContext();
   const [amountMint, setAmountMint] = useState("");
   const [isMinting, setIsMinting] = useState(false);
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [userBalance, setUserBalance] = useState("Hidden");
   const [instance, setInstance] = useState(null);
-  const { disconnect } = useWallet();
-  
+  const { logout: disconnect } = usePrivy();
+
   useEffect(() => {
     const getInstance = async () => {
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
       const instance = await getFhevmInstance();
       setInstance(instance);
-      setSigner(signer);
     };
 
     getInstance();
-
-    //below this is extra code, just to show how to handle account changes
-    const handleAccountsChanged = async (accounts) => {
-      if (accounts.length > 0) {
-        try {
-          const provider = new ethers.BrowserProvider(window.ethereum);
-          const signer = await provider.getSigner();
-          setSigner(signer);
-        } catch (error) {
-          console.error("Error updating signer:", error);
-          disconnect();
-        }
-      } else {
-        disconnect();
-      }
-    };
-
-    if (window.ethereum) {
-      window.ethereum.on("accountsChanged", handleAccountsChanged);
-    }
-
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener(
-          "accountsChanged",
-          handleAccountsChanged
-        );
-      }
-    };
   }, []);
 
   if (!instance) return null;
@@ -116,7 +85,8 @@ const ConfidentialERC20 = () => {
         encryptedInput.handles[0],
         "0x" + toHexString(encryptedInput.inputProof)
       );
-      await response.wait();
+      const tx = await response.getTransaction();
+      await tx.wait();
       setAmountMint("");
     } catch (e) {
       console.log(e);
@@ -131,24 +101,25 @@ const ConfidentialERC20 = () => {
       // Step 1: Check local storage for existing keys and EIP-712 signature for this contract
       const contractKey = `reencrypt_${CONTRACT_ADDRESS}`;
       const storedData = JSON.parse(localStorage.getItem(contractKey));
-  
+
       let publicKey, privateKey, signature;
-  
+
       if (storedData) {
         // Use existing keys and signature if found
         ({ publicKey, privateKey, signature } = storedData);
       } else {
         // Step 2: Generate keys and request EIP-712 signature if no data in local storage
-        const { publicKey: genPublicKey, privateKey: genPrivateKey } = instance.generateKeypair();
+        const { publicKey: genPublicKey, privateKey: genPrivateKey } =
+          instance.generateKeypair();
         const eip712 = instance.createEIP712(genPublicKey, CONTRACT_ADDRESS);
-  
+
         // Prompt user to sign the EIP-712 message
-        signature = await signer.signTypedData(
+        signature = await signer._signTypedData(
           eip712.domain,
           { Reencrypt: eip712.types.Reencrypt },
           eip712.message
         );
-  
+
         // Store generated data in local storage
         publicKey = genPublicKey;
         privateKey = genPrivateKey;
@@ -157,11 +128,11 @@ const ConfidentialERC20 = () => {
           JSON.stringify({ publicKey, privateKey, signature })
         );
       }
-  
+
       // Step 3: Use the public key, private key, and signature in the reencrypt function
       const contract = new Contract(CONTRACT_ADDRESS, erc20ABI, signer);
       const balanceHandle = await contract.balanceOf(await signer.getAddress());
-  
+
       if (balanceHandle.toString() === "0") {
         setUserBalance("0");
       } else {
@@ -181,7 +152,6 @@ const ConfidentialERC20 = () => {
       setIsDecrypting(false);
     }
   };
-  
 
   const formatBalance = (balance) => {
     if (balance === "Hidden") return balance;
