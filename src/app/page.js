@@ -4,7 +4,7 @@ import NotConnected from "@/components/not-connected";
 import { Source_Code_Pro } from "next/font/google";
 import React from "react";
 import Connected from "@/components/connected";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth"; 
 
 const sourceCodePro = Source_Code_Pro({
   subsets: ["latin"],
