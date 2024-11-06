@@ -83,7 +83,10 @@ const ConfidentialERC20 = () => {
 
       const response = await contract._mint(
         encryptedInput.handles[0],
-        "0x" + toHexString(encryptedInput.inputProof)
+        "0x" + toHexString(encryptedInput.inputProof),
+        {
+          gasLimit: 1000000
+        }
       );
       const tx = await response.getTransaction();
       await tx.wait();
