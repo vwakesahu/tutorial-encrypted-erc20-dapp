@@ -26,10 +26,15 @@ import { useWallet } from "@/contexts/wallet-context";
 import Link from "next/link";
 import { getFhevmInstance } from "@/utils/fhevm";
 
-const CONTRACT_ADDRESS = "0xC3f4B358393a966a1959A9079Edfa5Ff3324d195";
+const CONTRACT_ADDRESS = "0x06Db6EFB2474eE089Ac561a35C0D8673e8ba5b18";
 const mintABI = [
   {
     inputs: [
+      {
+        internalType: "address",
+        name: "_userAddress",
+        type: "address",
+      },
       {
         internalType: "einput",
         name: "encryptedAmount",
@@ -56,7 +61,7 @@ const ConfidentialERC20 = () => {
   const [userBalance, setUserBalance] = useState("Hidden");
   const [instance, setInstance] = useState(null);
   const { disconnect } = useWallet();
-  
+
   useEffect(() => {
     const getInstance = async () => {
       const provider = new BrowserProvider(window.ethereum);
@@ -98,7 +103,7 @@ const ConfidentialERC20 = () => {
     };
   }, []);
 
-  if (!instance) return null;
+  if (!instance) return <div>INSTANCE NOT CREATING...</div>;
 
   const mint = async (event) => {
     event.preventDefault();
@@ -112,9 +117,19 @@ const ConfidentialERC20 = () => {
       input.add64(ethers.parseUnits(amountMint.toString(), 6));
       const encryptedInput = input.encrypt();
 
-      const response = await contract._mint(
-        encryptedInput.handles[0],
+      console.log("user address: ", await signer.getAddress());
+      console.log("encryptedInput handle: ", encryptedInput.handles[0]);
+      console.log(
+        "encryptedInput proof: ",
         "0x" + toHexString(encryptedInput.inputProof)
+      );
+
+      const response = await contract._mint(
+        await signer.getAddress(),
+        encryptedInput.handles[0],
+        // encryptedInput.inputProof
+        "0x" + toHexString(encryptedInput.inputProof),
+        { gasLimit: 7000000 }
       );
       await response.wait();
       setAmountMint("");
@@ -131,24 +146,25 @@ const ConfidentialERC20 = () => {
       // Step 1: Check local storage for existing keys and EIP-712 signature for this contract
       const contractKey = `reencrypt_${CONTRACT_ADDRESS}`;
       const storedData = JSON.parse(localStorage.getItem(contractKey));
-  
+
       let publicKey, privateKey, signature;
-  
+
       if (storedData) {
         // Use existing keys and signature if found
         ({ publicKey, privateKey, signature } = storedData);
       } else {
         // Step 2: Generate keys and request EIP-712 signature if no data in local storage
-        const { publicKey: genPublicKey, privateKey: genPrivateKey } = instance.generateKeypair();
+        const { publicKey: genPublicKey, privateKey: genPrivateKey } =
+          instance.generateKeypair();
         const eip712 = instance.createEIP712(genPublicKey, CONTRACT_ADDRESS);
-  
+
         // Prompt user to sign the EIP-712 message
         signature = await signer.signTypedData(
           eip712.domain,
           { Reencrypt: eip712.types.Reencrypt },
           eip712.message
         );
-  
+
         // Store generated data in local storage
         publicKey = genPublicKey;
         privateKey = genPrivateKey;
@@ -157,11 +173,11 @@ const ConfidentialERC20 = () => {
           JSON.stringify({ publicKey, privateKey, signature })
         );
       }
-  
+
       // Step 3: Use the public key, private key, and signature in the reencrypt function
       const contract = new Contract(CONTRACT_ADDRESS, erc20ABI, signer);
       const balanceHandle = await contract.balanceOf(await signer.getAddress());
-  
+
       if (balanceHandle.toString() === "0") {
         setUserBalance("0");
       } else {
@@ -181,7 +197,6 @@ const ConfidentialERC20 = () => {
       setIsDecrypting(false);
     }
   };
-  
 
   const formatBalance = (balance) => {
     if (balance === "Hidden") return balance;
