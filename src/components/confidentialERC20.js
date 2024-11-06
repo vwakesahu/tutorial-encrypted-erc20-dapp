@@ -27,7 +27,7 @@ import { getFhevmInstance } from "@/utils/fhevm";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWalletContext } from "@/privy/walletContext";
 
-const CONTRACT_ADDRESS = "0x4921f7b5B40fA3D8082Fd55920fD63cc6a40f9e1";
+const CONTRACT_ADDRESS = "0xDdf405Ed20C9AcAbB395928221Dfb820b770080e";
 const mintABI = [
   {
     inputs: [
