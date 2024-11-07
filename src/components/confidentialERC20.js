@@ -27,10 +27,15 @@ import { getFhevmInstance } from "@/utils/fhevm";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWalletContext } from "@/privy/walletContext";
 
-const CONTRACT_ADDRESS = "0xDdf405Ed20C9AcAbB395928221Dfb820b770080e";
+const CONTRACT_ADDRESS = "0x8AA08a47179A2a40962FC11A3Ccc110Da4179b1a";
 const mintABI = [
   {
     inputs: [
+      {
+        internalType: "address",
+        name: "_userAddress",
+        type: "address",
+      },
       {
         internalType: "einput",
         name: "encryptedAmount",
@@ -82,10 +87,11 @@ const ConfidentialERC20 = () => {
       const encryptedInput = input.encrypt();
 
       const response = await contract._mint(
+        await signer.getAddress(),
         encryptedInput.handles[0],
         "0x" + toHexString(encryptedInput.inputProof),
         {
-          gasLimit: 1000000
+          gasLimit: 1000000,
         }
       );
       const tx = await response.getTransaction();
