@@ -26,7 +26,7 @@ import { useWallet } from "@/contexts/wallet-context";
 import Link from "next/link";
 import { getFhevmInstance } from "@/utils/fhevm";
 
-const CONTRACT_ADDRESS = "0x06Db6EFB2474eE089Ac561a35C0D8673e8ba5b18";
+const CONTRACT_ADDRESS = "0x8AA08a47179A2a40962FC11A3Ccc110Da4179b1a";
 const mintABI = [
   {
     inputs: [
@@ -117,12 +117,12 @@ const ConfidentialERC20 = () => {
       input.add64(ethers.parseUnits(amountMint.toString(), 6));
       const encryptedInput = input.encrypt();
 
-      console.log("user address: ", await signer.getAddress());
-      console.log("encryptedInput handle: ", encryptedInput.handles[0]);
-      console.log(
-        "encryptedInput proof: ",
-        "0x" + toHexString(encryptedInput.inputProof)
-      );
+      // console.log("user address: ", await signer.getAddress());
+      // console.log("encryptedInput handle: ", encryptedInput.handles[0]);
+      // console.log(
+      //   "encryptedInput proof: ",
+      //   "0x" + toHexString(encryptedInput.inputProof)
+      // );
 
       const response = await contract._mint(
         await signer.getAddress(),
